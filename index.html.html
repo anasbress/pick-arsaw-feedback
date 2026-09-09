@@ -1,0 +1,543 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #f9f9f9; font-family: system-ui, -apple-system, sans-serif; min-height: 100vh; }
+
+  /* Hidden radios for page switching */
+  input[name="page"], input[name="star-en"], input[name="star-de"], input[name="star-ar"],
+  input[name="star-dari"], input[name="star-es"], input[name="star-ur"], input[name="star-tr"],
+  input[name="cat-en"], input[name="cat-de"], input[name="cat-ar"], input[name="cat-dari"],
+  input[name="cat-es"], input[name="cat-ur"], input[name="cat-tr"],
+  input[name="show-name"] { display: none; }
+
+  .page { display: none; padding: 16px; max-width: 480px; margin: 0 auto; }
+
+  /* Page routing */
+  #pg-home:checked ~ .pg-home { display: block; }
+  #pg-en:checked ~ .pg-en { display: block; }
+  #pg-de:checked ~ .pg-de { display: block; }
+  #pg-ar:checked ~ .pg-ar { display: block; }
+  #pg-dari:checked ~ .pg-dari { display: block; }
+  #pg-es:checked ~ .pg-es { display: block; }
+  #pg-ur:checked ~ .pg-ur { display: block; }
+  #pg-tr:checked ~ .pg-tr { display: block; }
+  #pg-done:checked ~ .pg-done { display: block; }
+
+  /* Header */
+  .hdr { text-align: center; padding: 28px 0 12px; }
+  .hdr-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 60px; height: 60px;
+    background: linear-gradient(135deg, #FF9900, #FFB84D);
+    border-radius: 16px; margin-bottom: 14px;
+  }
+  .hdr-icon svg { width: 34px; height: 34px; fill: #fff; }
+  .hdr h1 { font-size: 22px; color: #111; font-weight: 700; letter-spacing: -0.3px; }
+  .hdr p { font-size: 13px; color: #666; margin-top: 6px; line-height: 1.5; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #E8F5E9; color: #2E7D32;
+    font-size: 12px; font-weight: 600;
+    padding: 6px 14px; border-radius: 20px; margin-top: 14px;
+  }
+  .badge svg { width: 14px; height: 14px; fill: #2E7D32; }
+
+  /* Language grid */
+  .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+  .lang-btn {
+    display: flex; align-items: center; gap: 12px;
+    background: #fff; border: 2px solid #eee; border-radius: 12px;
+    padding: 14px 16px; cursor: pointer; transition: all 0.15s ease;
+  }
+  .lang-btn:hover {
+    border-color: #FF9900; background: #FFF8EE;
+    transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,153,0,0.12);
+  }
+  .lang-btn .flag { font-size: 26px; line-height: 1; }
+  .lang-btn .lname { font-size: 14px; font-weight: 600; color: #111; }
+  .lang-btn .lnat { font-size: 11px; color: #888; margin-top: 1px; }
+  .lang-btn:last-child:nth-child(odd) { grid-column: 1 / -1; max-width: 50%; justify-self: center; }
+
+  /* Back link */
+  .back {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 13px; color: #888; cursor: pointer; transition: color 0.15s;
+    margin-bottom: 4px;
+  }
+  .back:hover { color: #FF9900; }
+
+  /* Form card */
+  .fcard {
+    background: #fff; border-radius: 14px; padding: 24px;
+    margin-top: 14px; border: 1px solid #eee;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .fgroup { margin-bottom: 22px; }
+  .fgroup:last-child { margin-bottom: 0; }
+  .flabel {
+    display: block; font-size: 13px; font-weight: 600;
+    color: #333; margin-bottom: 10px;
+  }
+
+  /* Name field - hidden by default, shown via checkbox */
+  .name-field { display: none; }
+  #show-name-yes:checked ~ .page .name-field { display: block; }
+  .name-input {
+    width: 100%; padding: 11px 14px; border: 1.5px solid #ddd;
+    border-radius: 8px; font-size: 14px; font-family: system-ui, sans-serif;
+    outline: none; transition: border-color 0.15s;
+  }
+  .name-input:focus { border-color: #FF9900; }
+  .name-hint { font-size: 11px; color: #999; margin-top: 4px; }
+
+  /* Star rating */
+  .stars { display: flex; gap: 6px; direction: ltr; }
+  .star-label {
+    display: flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; cursor: pointer;
+    border-radius: 8px; transition: all 0.15s ease;
+  }
+  .star-label:hover { background: #FFF8EE; transform: scale(1.1); }
+  .star-label svg { width: 32px; height: 32px; fill: #ddd; transition: fill 0.15s; }
+  .star-label:hover svg { fill: #FFB84D; }
+
+  /* Star checked states - English */
+  #s-en-1:checked ~ .pg-en .star-label[for="s-en-1"] svg,
+  #s-en-2:checked ~ .pg-en .star-label[for="s-en-1"] svg, #s-en-2:checked ~ .pg-en .star-label[for="s-en-2"] svg,
+  #s-en-3:checked ~ .pg-en .star-label[for="s-en-1"] svg, #s-en-3:checked ~ .pg-en .star-label[for="s-en-2"] svg, #s-en-3:checked ~ .pg-en .star-label[for="s-en-3"] svg,
+  #s-en-4:checked ~ .pg-en .star-label[for="s-en-1"] svg, #s-en-4:checked ~ .pg-en .star-label[for="s-en-2"] svg, #s-en-4:checked ~ .pg-en .star-label[for="s-en-3"] svg, #s-en-4:checked ~ .pg-en .star-label[for="s-en-4"] svg,
+  #s-en-5:checked ~ .pg-en .star-label[for="s-en-1"] svg, #s-en-5:checked ~ .pg-en .star-label[for="s-en-2"] svg, #s-en-5:checked ~ .pg-en .star-label[for="s-en-3"] svg, #s-en-5:checked ~ .pg-en .star-label[for="s-en-4"] svg, #s-en-5:checked ~ .pg-en .star-label[for="s-en-5"] svg
+  { fill: #FFB84D; }
+
+  /* Star checked states - German */
+  #s-de-1:checked ~ .pg-de .star-label[for="s-de-1"] svg,
+  #s-de-2:checked ~ .pg-de .star-label[for="s-de-1"] svg, #s-de-2:checked ~ .pg-de .star-label[for="s-de-2"] svg,
+  #s-de-3:checked ~ .pg-de .star-label[for="s-de-1"] svg, #s-de-3:checked ~ .pg-de .star-label[for="s-de-2"] svg, #s-de-3:checked ~ .pg-de .star-label[for="s-de-3"] svg,
+  #s-de-4:checked ~ .pg-de .star-label[for="s-de-1"] svg, #s-de-4:checked ~ .pg-de .star-label[for="s-de-2"] svg, #s-de-4:checked ~ .pg-de .star-label[for="s-de-3"] svg, #s-de-4:checked ~ .pg-de .star-label[for="s-de-4"] svg,
+  #s-de-5:checked ~ .pg-de .star-label[for="s-de-1"] svg, #s-de-5:checked ~ .pg-de .star-label[for="s-de-2"] svg, #s-de-5:checked ~ .pg-de .star-label[for="s-de-3"] svg, #s-de-5:checked ~ .pg-de .star-label[for="s-de-4"] svg, #s-de-5:checked ~ .pg-de .star-label[for="s-de-5"] svg
+  { fill: #FFB84D; }
+
+  /* Star checked states - Arabic */
+  #s-ar-1:checked ~ .pg-ar .star-label[for="s-ar-1"] svg,
+  #s-ar-2:checked ~ .pg-ar .star-label[for="s-ar-1"] svg, #s-ar-2:checked ~ .pg-ar .star-label[for="s-ar-2"] svg,
+  #s-ar-3:checked ~ .pg-ar .star-label[for="s-ar-1"] svg, #s-ar-3:checked ~ .pg-ar .star-label[for="s-ar-2"] svg, #s-ar-3:checked ~ .pg-ar .star-label[for="s-ar-3"] svg,
+  #s-ar-4:checked ~ .pg-ar .star-label[for="s-ar-1"] svg, #s-ar-4:checked ~ .pg-ar .star-label[for="s-ar-2"] svg, #s-ar-4:checked ~ .pg-ar .star-label[for="s-ar-3"] svg, #s-ar-4:checked ~ .pg-ar .star-label[for="s-ar-4"] svg,
+  #s-ar-5:checked ~ .pg-ar .star-label[for="s-ar-1"] svg, #s-ar-5:checked ~ .pg-ar .star-label[for="s-ar-2"] svg, #s-ar-5:checked ~ .pg-ar .star-label[for="s-ar-3"] svg, #s-ar-5:checked ~ .pg-ar .star-label[for="s-ar-4"] svg, #s-ar-5:checked ~ .pg-ar .star-label[for="s-ar-5"] svg
+  { fill: #FFB84D; }
+
+  /* Star checked states - Dari */
+  #s-dari-1:checked ~ .pg-dari .star-label[for="s-dari-1"] svg,
+  #s-dari-2:checked ~ .pg-dari .star-label[for="s-dari-1"] svg, #s-dari-2:checked ~ .pg-dari .star-label[for="s-dari-2"] svg,
+  #s-dari-3:checked ~ .pg-dari .star-label[for="s-dari-1"] svg, #s-dari-3:checked ~ .pg-dari .star-label[for="s-dari-2"] svg, #s-dari-3:checked ~ .pg-dari .star-label[for="s-dari-3"] svg,
+  #s-dari-4:checked ~ .pg-dari .star-label[for="s-dari-1"] svg, #s-dari-4:checked ~ .pg-dari .star-label[for="s-dari-2"] svg, #s-dari-4:checked ~ .pg-dari .star-label[for="s-dari-3"] svg, #s-dari-4:checked ~ .pg-dari .star-label[for="s-dari-4"] svg,
+  #s-dari-5:checked ~ .pg-dari .star-label[for="s-dari-1"] svg, #s-dari-5:checked ~ .pg-dari .star-label[for="s-dari-2"] svg, #s-dari-5:checked ~ .pg-dari .star-label[for="s-dari-3"] svg, #s-dari-5:checked ~ .pg-dari .star-label[for="s-dari-4"] svg, #s-dari-5:checked ~ .pg-dari .star-label[for="s-dari-5"] svg
+  { fill: #FFB84D; }
+
+  /* Star checked states - Spanish */
+  #s-es-1:checked ~ .pg-es .star-label[for="s-es-1"] svg,
+  #s-es-2:checked ~ .pg-es .star-label[for="s-es-1"] svg, #s-es-2:checked ~ .pg-es .star-label[for="s-es-2"] svg,
+  #s-es-3:checked ~ .pg-es .star-label[for="s-es-1"] svg, #s-es-3:checked ~ .pg-es .star-label[for="s-es-2"] svg, #s-es-3:checked ~ .pg-es .star-label[for="s-es-3"] svg,
+  #s-es-4:checked ~ .pg-es .star-label[for="s-es-1"] svg, #s-es-4:checked ~ .pg-es .star-label[for="s-es-2"] svg, #s-es-4:checked ~ .pg-es .star-label[for="s-es-3"] svg, #s-es-4:checked ~ .pg-es .star-label[for="s-es-4"] svg,
+  #s-es-5:checked ~ .pg-es .star-label[for="s-es-1"] svg, #s-es-5:checked ~ .pg-es .star-label[for="s-es-2"] svg, #s-es-5:checked ~ .pg-es .star-label[for="s-es-3"] svg, #s-es-5:checked ~ .pg-es .star-label[for="s-es-4"] svg, #s-es-5:checked ~ .pg-es .star-label[for="s-es-5"] svg
+  { fill: #FFB84D; }
+
+  /* Star checked states - Urdu */
+  #s-ur-1:checked ~ .pg-ur .star-label[for="s-ur-1"] svg,
+  #s-ur-2:checked ~ .pg-ur .star-label[for="s-ur-1"] svg, #s-ur-2:checked ~ .pg-ur .star-label[for="s-ur-2"] svg,
+  #s-ur-3:checked ~ .pg-ur .star-label[for="s-ur-1"] svg, #s-ur-3:checked ~ .pg-ur .star-label[for="s-ur-2"] svg, #s-ur-3:checked ~ .pg-ur .star-label[for="s-ur-3"] svg,
+  #s-ur-4:checked ~ .pg-ur .star-label[for="s-ur-1"] svg, #s-ur-4:checked ~ .pg-ur .star-label[for="s-ur-2"] svg, #s-ur-4:checked ~ .pg-ur .star-label[for="s-ur-3"] svg, #s-ur-4:checked ~ .pg-ur .star-label[for="s-ur-4"] svg,
+  #s-ur-5:checked ~ .pg-ur .star-label[for="s-ur-1"] svg, #s-ur-5:checked ~ .pg-ur .star-label[for="s-ur-2"] svg, #s-ur-5:checked ~ .pg-ur .star-label[for="s-ur-3"] svg, #s-ur-5:checked ~ .pg-ur .star-label[for="s-ur-4"] svg, #s-ur-5:checked ~ .pg-ur .star-label[for="s-ur-5"] svg
+  { fill: #FFB84D; }
+
+  /* Star checked states - Turkish */
+  #s-tr-1:checked ~ .pg-tr .star-label[for="s-tr-1"] svg,
+  #s-tr-2:checked ~ .pg-tr .star-label[for="s-tr-1"] svg, #s-tr-2:checked ~ .pg-tr .star-label[for="s-tr-2"] svg,
+  #s-tr-3:checked ~ .pg-tr .star-label[for="s-tr-1"] svg, #s-tr-3:checked ~ .pg-tr .star-label[for="s-tr-2"] svg, #s-tr-3:checked ~ .pg-tr .star-label[for="s-tr-3"] svg,
+  #s-tr-4:checked ~ .pg-tr .star-label[for="s-tr-1"] svg, #s-tr-4:checked ~ .pg-tr .star-label[for="s-tr-2"] svg, #s-tr-4:checked ~ .pg-tr .star-label[for="s-tr-3"] svg, #s-tr-4:checked ~ .pg-tr .star-label[for="s-tr-4"] svg,
+  #s-tr-5:checked ~ .pg-tr .star-label[for="s-tr-1"] svg, #s-tr-5:checked ~ .pg-tr .star-label[for="s-tr-2"] svg, #s-tr-5:checked ~ .pg-tr .star-label[for="s-tr-3"] svg, #s-tr-5:checked ~ .pg-tr .star-label[for="s-tr-4"] svg, #s-tr-5:checked ~ .pg-tr .star-label[for="s-tr-5"] svg
+  { fill: #FFB84D; }
+
+  /* Category pills */
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill-label {
+    padding: 9px 16px; border: 1.5px solid #ddd; border-radius: 20px;
+    font-size: 13px; color: #555; cursor: pointer; background: #fff;
+    transition: all 0.15s ease;
+  }
+  .pill-label:hover { border-color: #FF9900; background: #FFF8EE; color: #B36B00; }
+
+  /* Category checked states */
+  #c-en-1:checked ~ .pg-en .pill-label[for="c-en-1"],
+  #c-en-2:checked ~ .pg-en .pill-label[for="c-en-2"],
+  #c-en-3:checked ~ .pg-en .pill-label[for="c-en-3"],
+  #c-en-4:checked ~ .pg-en .pill-label[for="c-en-4"],
+  #c-en-5:checked ~ .pg-en .pill-label[for="c-en-5"],
+  #c-de-1:checked ~ .pg-de .pill-label[for="c-de-1"],
+  #c-de-2:checked ~ .pg-de .pill-label[for="c-de-2"],
+  #c-de-3:checked ~ .pg-de .pill-label[for="c-de-3"],
+  #c-de-4:checked ~ .pg-de .pill-label[for="c-de-4"],
+  #c-de-5:checked ~ .pg-de .pill-label[for="c-de-5"],
+  #c-ar-1:checked ~ .pg-ar .pill-label[for="c-ar-1"],
+  #c-ar-2:checked ~ .pg-ar .pill-label[for="c-ar-2"],
+  #c-ar-3:checked ~ .pg-ar .pill-label[for="c-ar-3"],
+  #c-ar-4:checked ~ .pg-ar .pill-label[for="c-ar-4"],
+  #c-ar-5:checked ~ .pg-ar .pill-label[for="c-ar-5"],
+  #c-dari-1:checked ~ .pg-dari .pill-label[for="c-dari-1"],
+  #c-dari-2:checked ~ .pg-dari .pill-label[for="c-dari-2"],
+  #c-dari-3:checked ~ .pg-dari .pill-label[for="c-dari-3"],
+  #c-dari-4:checked ~ .pg-dari .pill-label[for="c-dari-4"],
+  #c-dari-5:checked ~ .pg-dari .pill-label[for="c-dari-5"],
+  #c-es-1:checked ~ .pg-es .pill-label[for="c-es-1"],
+  #c-es-2:checked ~ .pg-es .pill-label[for="c-es-2"],
+  #c-es-3:checked ~ .pg-es .pill-label[for="c-es-3"],
+  #c-es-4:checked ~ .pg-es .pill-label[for="c-es-4"],
+  #c-es-5:checked ~ .pg-es .pill-label[for="c-es-5"],
+  #c-ur-1:checked ~ .pg-ur .pill-label[for="c-ur-1"],
+  #c-ur-2:checked ~ .pg-ur .pill-label[for="c-ur-2"],
+  #c-ur-3:checked ~ .pg-ur .pill-label[for="c-ur-3"],
+  #c-ur-4:checked ~ .pg-ur .pill-label[for="c-ur-4"],
+  #c-ur-5:checked ~ .pg-ur .pill-label[for="c-ur-5"],
+  #c-tr-1:checked ~ .pg-tr .pill-label[for="c-tr-1"],
+  #c-tr-2:checked ~ .pg-tr .pill-label[for="c-tr-2"],
+  #c-tr-3:checked ~ .pg-tr .pill-label[for="c-tr-3"],
+  #c-tr-4:checked ~ .pg-tr .pill-label[for="c-tr-4"],
+  #c-tr-5:checked ~ .pg-tr .pill-label[for="c-tr-5"]
+  { border-color: #FF9900; background: #FF9900; color: #fff; }
+
+  /* Textarea */
+  textarea {
+    width: 100%; min-height: 110px; border: 1.5px solid #ddd;
+    border-radius: 8px; padding: 12px; font-family: system-ui, sans-serif;
+    font-size: 14px; resize: vertical; outline: none;
+    transition: border-color 0.15s;
+  }
+  textarea:focus { border-color: #FF9900; }
+
+  /* Submit button */
+  .submit-btn {
+    display: block; width: 100%; padding: 15px;
+    background: linear-gradient(135deg, #FF9900, #E68A00);
+    color: #fff; border: none; border-radius: 10px;
+    font-size: 16px; font-weight: 700; cursor: pointer;
+    margin-top: 8px; transition: all 0.15s ease;
+    letter-spacing: 0.3px;
+  }
+  .submit-btn:hover { background: linear-gradient(135deg, #FFB84D, #FF9900); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,153,0,0.3); }
+
+  /* RTL */
+  .rtl { direction: rtl; text-align: right; }
+  .rtl textarea { direction: rtl; text-align: right; }
+  .rtl .name-input { direction: rtl; text-align: right; }
+
+  /* Footer */
+  .ftr { text-align: center; padding: 14px; font-size: 11px; color: #bbb; }
+
+  /* Success page */
+  .success-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 80px; height: 80px; background: #E8F5E9;
+    border-radius: 50%; margin-bottom: 16px;
+  }
+  .success-icon svg { width: 44px; height: 44px; fill: #2E7D32; }
+
+  /* Animations */
+  .page, .lang-btn, .fcard { opacity: 1; }
+  @media (prefers-reduced-motion: no-preference) {
+    .page { animation: fadeIn 0.35s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .lang-btn { animation: fadeIn 0.35s ease-out both; }
+    .lang-btn:nth-child(1) { animation-delay: 0.03s; }
+    .lang-btn:nth-child(2) { animation-delay: 0.06s; }
+    .lang-btn:nth-child(3) { animation-delay: 0.09s; }
+    .lang-btn:nth-child(4) { animation-delay: 0.12s; }
+    .lang-btn:nth-child(5) { animation-delay: 0.15s; }
+    .lang-btn:nth-child(6) { animation-delay: 0.18s; }
+    .lang-btn:nth-child(7) { animation-delay: 0.21s; }
+  }
+
+  /* Star SVG path */
+  .sp { }
+</style>
+</head>
+<body>
+
+<!-- Page radios -->
+<input type="radio" name="page" id="pg-home" checked>
+<input type="radio" name="page" id="pg-en">
+<input type="radio" name="page" id="pg-de">
+<input type="radio" name="page" id="pg-ar">
+<input type="radio" name="page" id="pg-dari">
+<input type="radio" name="page" id="pg-es">
+<input type="radio" name="page" id="pg-ur">
+<input type="radio" name="page" id="pg-tr">
+<input type="radio" name="page" id="pg-done">
+
+<!-- Name toggle (admin sets this) -->
+<input type="checkbox" name="show-name" id="show-name-yes">
+
+<!-- Star radios -->
+<input type="radio" name="star-en" id="s-en-1"><input type="radio" name="star-en" id="s-en-2"><input type="radio" name="star-en" id="s-en-3"><input type="radio" name="star-en" id="s-en-4"><input type="radio" name="star-en" id="s-en-5">
+<input type="radio" name="star-de" id="s-de-1"><input type="radio" name="star-de" id="s-de-2"><input type="radio" name="star-de" id="s-de-3"><input type="radio" name="star-de" id="s-de-4"><input type="radio" name="star-de" id="s-de-5">
+<input type="radio" name="star-ar" id="s-ar-1"><input type="radio" name="star-ar" id="s-ar-2"><input type="radio" name="star-ar" id="s-ar-3"><input type="radio" name="star-ar" id="s-ar-4"><input type="radio" name="star-ar" id="s-ar-5">
+<input type="radio" name="star-dari" id="s-dari-1"><input type="radio" name="star-dari" id="s-dari-2"><input type="radio" name="star-dari" id="s-dari-3"><input type="radio" name="star-dari" id="s-dari-4"><input type="radio" name="star-dari" id="s-dari-5">
+<input type="radio" name="star-es" id="s-es-1"><input type="radio" name="star-es" id="s-es-2"><input type="radio" name="star-es" id="s-es-3"><input type="radio" name="star-es" id="s-es-4"><input type="radio" name="star-es" id="s-es-5">
+<input type="radio" name="star-ur" id="s-ur-1"><input type="radio" name="star-ur" id="s-ur-2"><input type="radio" name="star-ur" id="s-ur-3"><input type="radio" name="star-ur" id="s-ur-4"><input type="radio" name="star-ur" id="s-ur-5">
+<input type="radio" name="star-tr" id="s-tr-1"><input type="radio" name="star-tr" id="s-tr-2"><input type="radio" name="star-tr" id="s-tr-3"><input type="radio" name="star-tr" id="s-tr-4"><input type="radio" name="star-tr" id="s-tr-5">
+
+<!-- Category radios -->
+<input type="radio" name="cat-en" id="c-en-1"><input type="radio" name="cat-en" id="c-en-2"><input type="radio" name="cat-en" id="c-en-3"><input type="radio" name="cat-en" id="c-en-4"><input type="radio" name="cat-en" id="c-en-5">
+<input type="radio" name="cat-de" id="c-de-1"><input type="radio" name="cat-de" id="c-de-2"><input type="radio" name="cat-de" id="c-de-3"><input type="radio" name="cat-de" id="c-de-4"><input type="radio" name="cat-de" id="c-de-5">
+<input type="radio" name="cat-ar" id="c-ar-1"><input type="radio" name="cat-ar" id="c-ar-2"><input type="radio" name="cat-ar" id="c-ar-3"><input type="radio" name="cat-ar" id="c-ar-4"><input type="radio" name="cat-ar" id="c-ar-5">
+<input type="radio" name="cat-dari" id="c-dari-1"><input type="radio" name="cat-dari" id="c-dari-2"><input type="radio" name="cat-dari" id="c-dari-3"><input type="radio" name="cat-dari" id="c-dari-4"><input type="radio" name="cat-dari" id="c-dari-5">
+<input type="radio" name="cat-es" id="c-es-1"><input type="radio" name="cat-es" id="c-es-2"><input type="radio" name="cat-es" id="c-es-3"><input type="radio" name="cat-es" id="c-es-4"><input type="radio" name="cat-es" id="c-es-5">
+<input type="radio" name="cat-ur" id="c-ur-1"><input type="radio" name="cat-ur" id="c-ur-2"><input type="radio" name="cat-ur" id="c-ur-3"><input type="radio" name="cat-ur" id="c-ur-4"><input type="radio" name="cat-ur" id="c-ur-5">
+<input type="radio" name="cat-tr" id="c-tr-1"><input type="radio" name="cat-tr" id="c-tr-2"><input type="radio" name="cat-tr" id="c-tr-3"><input type="radio" name="cat-tr" id="c-tr-4"><input type="radio" name="cat-tr" id="c-tr-5">
+
+<!-- ==================== HOME PAGE ==================== -->
+<div class="page pg-home">
+  <div class="hdr">
+    <div class="hdr-icon">
+      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/><path d="M7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/></svg>
+    </div>
+    <h1>Pick ARSAW Feedback</h1>
+    <p>Your voice matters! Choose your language below.</p>
+    <div class="badge">
+      <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+      100% Anonymous
+    </div>
+  </div>
+  <div class="lang-grid">
+    <label class="lang-btn" for="pg-en"><span class="flag">🇬🇧</span><div><div class="lname">English</div><div class="lnat">English</div></div></label>
+    <label class="lang-btn" for="pg-de"><span class="flag">🇩🇪</span><div><div class="lname">German</div><div class="lnat">Deutsch</div></div></label>
+    <label class="lang-btn" for="pg-ar"><span class="flag">🇸🇦</span><div><div class="lname">Arabic</div><div class="lnat">العربية</div></div></label>
+    <label class="lang-btn" for="pg-dari"><span class="flag">🇦🇫</span><div><div class="lname">Dari</div><div class="lnat">دری</div></div></label>
+    <label class="lang-btn" for="pg-es"><span class="flag">🇪🇸</span><div><div class="lname">Spanish</div><div class="lnat">Español</div></div></label>
+    <label class="lang-btn" for="pg-ur"><span class="flag">🇵🇰</span><div><div class="lname">Urdu</div><div class="lnat">اردو</div></div></label>
+    <label class="lang-btn" for="pg-tr"><span class="flag">🇹🇷</span><div><div class="lname">Turkish</div><div class="lnat">Türkçe</div></div></label>
+  </div>
+  <div class="ftr">Pick ARSAW · Amazon</div>
+</div>
+
+<!-- ==================== ENGLISH ==================== -->
+<div class="page pg-en">
+  <label class="back" for="pg-home"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> Change language</label>
+  <div class="hdr"><h1>📝 Share Your Feedback</h1><p>Your feedback is completely anonymous</p></div>
+  <div class="fcard">
+    <div class="fgroup name-field">
+      <label class="flabel">Your Name (Optional)</label>
+      <input type="text" class="name-input" placeholder="Enter your name...">
+      <div class="name-hint">This field is optional — leave blank to stay anonymous</div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">How would you rate your experience? ⭐</label>
+      <div class="stars">
+        <label class="star-label" for="s-en-1"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-en-2"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-en-3"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-en-4"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-en-5"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+      </div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">Category</label>
+      <div class="pills">
+        <label class="pill-label" for="c-en-1">💼 Work</label>
+        <label class="pill-label" for="c-en-2">💡 Suggestion</label>
+        <label class="pill-label" for="c-en-3">⚠️ Concern</label>
+        <label class="pill-label" for="c-en-4">🎉 Praise</label>
+        <label class="pill-label" for="c-en-5">📋 Other</label>
+      </div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">Your Feedback</label>
+      <textarea placeholder="Share your thoughts, ideas, or concerns..."></textarea>
+    </div>
+    <label class="submit-btn" for="pg-done">Submit Feedback</label>
+  </div>
+  <div class="ftr">Pick ARSAW · Amazon · 100% Anonymous</div>
+</div>
+
+<!-- ==================== GERMAN ==================== -->
+<div class="page pg-de">
+  <label class="back" for="pg-home"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> Sprache ändern</label>
+  <div class="hdr"><h1>📝 Teile dein Feedback</h1><p>Dein Feedback ist vollständig anonym</p></div>
+  <div class="fcard">
+    <div class="fgroup name-field">
+      <label class="flabel">Dein Name (Optional)</label>
+      <input type="text" class="name-input" placeholder="Gib deinen Namen ein...">
+      <div class="name-hint">Dieses Feld ist optional — leer lassen für Anonymität</div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">Wie bewertest du deine Erfahrung? ⭐</label>
+      <div class="stars">
+        <label class="star-label" for="s-de-1"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-de-2"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-de-3"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-de-4"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-de-5"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+      </div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">Kategorie</label>
+      <div class="pills">
+        <label class="pill-label" for="c-de-1">💼 Arbeit</label>
+        <label class="pill-label" for="c-de-2">💡 Vorschlag</label>
+        <label class="pill-label" for="c-de-3">⚠️ Bedenken</label>
+        <label class="pill-label" for="c-de-4">🎉 Lob</label>
+        <label class="pill-label" for="c-de-5">📋 Sonstiges</label>
+      </div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">Dein Feedback</label>
+      <textarea placeholder="Teile deine Gedanken, Ideen oder Bedenken..."></textarea>
+    </div>
+    <label class="submit-btn" for="pg-done">Feedback absenden</label>
+  </div>
+  <div class="ftr">Pick ARSAW · Amazon · 100% Anonym</div>
+</div>
+
+<!-- ==================== ARABIC (RTL) ==================== -->
+<div class="page pg-ar rtl">
+  <label class="back" for="pg-home" style="direction:rtl"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="transform:scaleX(-1)"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> تغيير اللغة</label>
+  <div class="hdr"><h1>📝 شاركنا رأيك</h1><p>ملاحظاتك مجهولة تماماً</p></div>
+  <div class="fcard">
+    <div class="fgroup name-field">
+      <label class="flabel">اسمك (اختياري)</label>
+      <input type="text" class="name-input" placeholder="...أدخل اسمك" style="direction:rtl;text-align:right">
+      <div class="name-hint">هذا الحقل اختياري — اتركه فارغاً للبقاء مجهولاً</div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">كيف تقيّم تجربتك؟ ⭐</label>
+      <div class="stars">
+        <label class="star-label" for="s-ar-1"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-ar-2"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-ar-3"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-ar-4"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-ar-5"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+      </div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">الفئة</label>
+      <div class="pills">
+        <label class="pill-label" for="c-ar-1">💼 العمل</label>
+        <label class="pill-label" for="c-ar-2">💡 اقتراح</label>
+        <label class="pill-label" for="c-ar-3">⚠️ قلق</label>
+        <label class="pill-label" for="c-ar-4">🎉 إشادة</label>
+        <label class="pill-label" for="c-ar-5">📋 أخرى</label>
+      </div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">ملاحظاتك</label>
+      <textarea placeholder="شاركنا أفكارك أو اقتراحاتك أو مخاوفك..."></textarea>
+    </div>
+    <label class="submit-btn" for="pg-done">إرسال الملاحظات</label>
+  </div>
+  <div class="ftr">Pick ARSAW · Amazon · مجهول 100%</div>
+</div>
+
+<!-- ==================== DARI (RTL) ==================== -->
+<div class="page pg-dari rtl">
+  <label class="back" for="pg-home" style="direction:rtl"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="transform:scaleX(-1)"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> تغییر زبان</label>
+  <div class="hdr"><h1>📝 نظر خود را شریک کنید</h1><p>نظرات شما کاملاً ناشناس است</p></div>
+  <div class="fcard">
+    <div class="fgroup name-field">
+      <label class="flabel">نام شما (اختیاری)</label>
+      <input type="text" class="name-input" placeholder="...نام خود را وارد کنید" style="direction:rtl;text-align:right">
+      <div class="name-hint">این فیلد اختیاری است — برای ناشناس ماندن خالی بگذارید</div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">تجربه خود را چگونه ارزیابی می‌کنید؟ ⭐</label>
+      <div class="stars">
+        <label class="star-label" for="s-dari-1"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-dari-2"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-dari-3"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-dari-4"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-dari-5"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+      </div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">دسته‌بندی</label>
+      <div class="pills">
+        <label class="pill-label" for="c-dari-1">💼 کار</label>
+        <label class="pill-label" for="c-dari-2">💡 پیشنهاد</label>
+        <label class="pill-label" for="c-dari-3">⚠️ نگرانی</label>
+        <label class="pill-label" for="c-dari-4">🎉 تقدیر</label>
+        <label class="pill-label" for="c-dari-5">📋 سایر</label>
+      </div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">نظرات شما</label>
+      <textarea placeholder="افکار، ایده‌ها یا نگرانی‌های خود را شریک کنید..."></textarea>
+    </div>
+    <label class="submit-btn" for="pg-done">ارسال نظرات</label>
+  </div>
+  <div class="ftr">Pick ARSAW · Amazon · ١٠٠٪ ناشناس</div>
+</div>
+
+<!-- ==================== SPANISH ==================== -->
+<div class="page pg-es">
+  <label class="back" for="pg-home"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> Cambiar idioma</label>
+  <div class="hdr"><h1>📝 Comparte tu Opinión</h1><p>Tu opinión es completamente anónima</p></div>
+  <div class="fcard">
+    <div class="fgroup name-field">
+      <label class="flabel">Tu Nombre (Opcional)</label>
+      <input type="text" class="name-input" placeholder="Ingresa tu nombre...">
+      <div class="name-hint">Este campo es opcional — déjalo en blanco para ser anónimo</div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">¿Cómo calificarías tu experiencia? ⭐</label>
+      <div class="stars">
+        <label class="star-label" for="s-es-1"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-es-2"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-es-3"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-es-4"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-es-5"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+      </div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">Categoría</label>
+      <div class="pills">
+        <label class="pill-label" for="c-es-1">💼 Trabajo</label>
+        <label class="pill-label" for="c-es-2">💡 Sugerencia</label>
+        <label class="pill-label" for="c-es-3">⚠️ Preocupación</label>
+        <label class="pill-label" for="c-es-4">🎉 Elogio</label>
+        <label class="pill-label" for="c-es-5">📋 Otro</label>
+      </div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">Tu Opinión</label>
+      <textarea placeholder="Comparte tus pensamientos, ideas o preocupaciones..."></textarea>
+    </div>
+    <label class="submit-btn" for="pg-done">Enviar Opinión</label>
+  </div>
+  <div class="ftr">Pick ARSAW · Amazon · 100% Anónimo</div>
+</div>
+
+<!-- ==================== URDU (RTL) ==================== -->
+<div class="page pg-ur rtl">
+  <label class="back" for="pg-home" style="direction:rtl"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="transform:scaleX(-1)"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> زبان تبدیل کریں</label>
+  <div class="hdr"><h1>📝 اپنی رائے دیں</h1><p>آپ کی رائے مکمل طور پر گمنام ہے</p></div>
+  <div class="fcard">
+    <div class="fgroup name-field">
+      <label class="flabel">آپ کا نام (اختیاری)</label>
+      <input type="text" class="name-input" placeholder="...اپنا نام درج کریں" style="direction:rtl;text-align:right">
+      <div class="name-hint">یہ فیلد اختیاری ہے — گمنام رہنے کے لیے خالی چھوڑ دیں</div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">آپ اپنے تجربے کی درجہ بندی کیسے کریں گے؟ ⭐</label>
+      <div class="stars">
+        <label class="star-label" for="s-ur-1"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-ur-2"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-ur-3"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-ur-4"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+        <label class="star-label" for="s-ur-5"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+      </div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">زمرہ</label>
