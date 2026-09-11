@@ -541,3 +541,34 @@
     </div>
     <div class="fgroup">
       <label class="flabel">زمرہ</label>
+<script>
+document.querySelectorAll('.submit-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    // Grab all textareas across all language pages, find the one with actual text
+    var textareas = document.querySelectorAll('textarea');
+    var feedbackText = '';
+    textareas.forEach(function(t) {
+      if (t.value.trim() !== '') feedbackText = t.value.trim();
+    });
+
+    // Grab selected star rating (checked radio with name starting "star-")
+    var starRadio = document.querySelector('input[name^="star-"]:checked');
+    var rating = starRadio ? starRadio.id : 'not rated';
+
+    // Grab selected category (checked radio with name starting "cat-")
+    var catRadio = document.querySelector('input[name^="cat-"]:checked');
+    var category = catRadio ? catRadio.nextElementSibling.textContent.trim() : 'no category';
+
+    if (feedbackText === '') return; // skip empty submissions
+
+    fetch('https://hooks.slack.com/services/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', {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: 'New anonymous feedback\nCategory: ' + category + '\nRating: ' + rating + '\nMessage: ' + feedbackText
+      })
+    });
+  });
+});
+</script>
